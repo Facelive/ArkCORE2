@@ -306,7 +306,7 @@ void AchievementMgrBase::ResetAchievementCriteria(AchievementCriteriaTypes type,
 
 void AchievementMgrBase::SendCriteriaUpdate(AchievementCriteriaEntry const* entry, CriteriaProgress const* progress, uint32 timeElapsed, bool timedCompleted, Player* player)
 {
-    if(!_guild)
+    if (!_guild)
     {
         WorldPacket data(SMSG_CRITERIA_UPDATE, 8+4+8);
         data << uint32(entry->ID);
@@ -1585,7 +1585,7 @@ void AchievementMgrBase::RemoveCriteriaProgress(const AchievementCriteriaEntry *
     if (criteriaProgress == m_criteriaProgress.end())
         return;
 
-    if(!_guild)
+    if (!_guild)
     {
         WorldPacket data(SMSG_CRITERIA_DELETED, 4);
         data << uint32(entry->ID);
@@ -1647,7 +1647,7 @@ bool AchievementMgrBase::CanUpdateCriteria(AchievementCriteriaEntry const* crite
 
     for (uint32 i = 0; i < 3; ++i)
     {
-        if(!criteria->moreRequirement[i])
+        if (!criteria->moreRequirement[i])
             continue;
 
         uint32 value = criteria->moreRequirementValue[i];
@@ -1677,7 +1677,7 @@ bool AchievementMgrBase::CanUpdateCriteria(AchievementCriteriaEntry const* crite
                 if (!unit)
                     return false;
 
-                if(!unit->HasAura(value))
+                if (!unit->HasAura(value))
                     return false;
                 break;
             }
