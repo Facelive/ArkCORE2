@@ -6030,11 +6030,11 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     // Remove aura (before cast for prevent infinite loop handlers)
                     RemoveAurasDueToSpell(triggeredByAura->GetId());
 
-                    uint32 spell = sSpellMgr->GetSpellWithRank(27285, dummySpell->GetRank());
+                    uint32 explosionSpell = 27285;
 
                     // Cast finish spell (triggeredByAura already not exist!)
                     if (Unit* caster = GetUnit(*this, casterGuid))
-                        caster->CastSpell(this, spell, true, castItem);
+                        caster->CastSpell(this, explosionSpell, true, castItem);
                     return true;                            // no hidden cooldown
                 }
 
@@ -6613,11 +6613,6 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
         {
             switch (dummySpell->Id)
             {
-                case 56800: // Glyph of Backstab
-                {
-                    triggered_spell_id = 63975;
-                    break;
-                }
                 case 32748: // Deadly Throw Interrupt
                 {
                     // Prevent cast Deadly Throw Interrupt on self from last effect (apply dummy) of Deadly Throw
@@ -6625,6 +6620,38 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                         return false;
 
                     triggered_spell_id = 32747;
+                    break;
+                }
+                case 56807: // Glyph of hemorrhage
+                {
+                    basepoints0 = int32(0.40f * damage);
+                    triggered_spell_id = 89775;
+                    break;
+                }
+                // Venomeous wounds rank 1 & 2
+                case 79133:
+                case 79134:
+                {
+                    if(effIndex != 0)
+                        return false;
+
+                    bool poisoned = false;
+                    Unit::AuraApplicationMap const& auras = target->GetAppliedAuras();
+
+                    for (Unit::AuraApplicationMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+                    {
+                        if (itr->second->GetBase()->GetSpellInfo()->Dispel == DISPEL_POISON)
+                        {
+                            poisoned = true;
+                            break;
+                        }
+                    }
+                    if (!poisoned)
+                        return false;
+
+                    basepoints0 = triggerAmount;
+                    this->CastCustomSpell(this, 51637, &basepoints0, NULL, NULL, true);
+                    triggered_spell_id = 79136;
                     break;
                 }
             }
@@ -8088,6 +8115,9 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 damage, Aura* triggeredByAura, Sp
                 {
                     *handled = true;
 
+                    if (!procSpell)
+                        return false;
+
                     // Need stun, root, or fear mechanic
                     if (!(procSpell->GetAllEffectsMechanicMask() & ((1<<MECHANIC_ROOT)|(1<<MECHANIC_STUN)|(1<<MECHANIC_FEAR))))
                         return false;
@@ -8311,6 +8341,19 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 damage, Aura* triggeredByAura, Sp
             }
             break;
         }
+        case SPELLFAMILY_ROGUE:
+            switch(dummySpell->Id)
+            {
+                // Gouge
+                case 1776:
+                    *handled = true;
+                    // Check so gouge spell effect [1] (SPELL_EFFECT_SCHOOL_DAMAGE) cannot cancel stun effect
+                    if(procSpell && procSpell->Id == 1776)
+                        return false;
+                    return true;
+                break;
+            }
+            break;
         case SPELLFAMILY_WARRIOR:
         {
             switch (dummySpell->Id)
