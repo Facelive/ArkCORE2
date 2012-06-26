@@ -1240,7 +1240,7 @@ public:
 
         void Register()
         {
-            OnEffectHitTarget += SpellEffectFn(spell_gen_magic_rooster_SpellScript::HandleScript, EFFECT_2, SPELL_EFFECT_SCRIPT_EFFECT);
+            OnEffectHitTarget += SpellEffectFn(spell_gen_magic_rooster_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_APPLY_AURA);
         }
     };
 
