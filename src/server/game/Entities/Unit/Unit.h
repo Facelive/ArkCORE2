@@ -2270,6 +2270,17 @@ class Unit : public WorldObject
                 SetUInt64Value(UNIT_FIELD_TARGET, 0);
         }
 
+        void AddSpellSwap(uint32 oldSpell, uint32 newSpell) { _spellSwaps[oldSpell] = newSpell; }
+        void RemoveSpellSwap(uint32 originalSpell) { _spellSwaps.erase(originalSpell); }
+        uint32 GetSpellForCast(uint32 spellId) const
+        {
+            std::map<uint32, uint32>::const_iterator itr = _spellSwaps.find(spellId);
+            if (itr != _spellSwaps.end())
+                return itr->second;
+
+            return spellId;
+        }
+        
         void AddSpellMod(SpellModifier* mod, bool apply);
         bool IsAffectedBySpellmod(SpellInfo const *spellInfo, SpellModifier *mod, Spell* spell = NULL);
         template <class T> T ApplySpellMod(uint32 spellId, SpellModOp op, T &basevalue, Spell* spell = NULL, Unit* target = NULL);
@@ -2427,6 +2438,7 @@ class Unit : public WorldObject
 
         int32 _eclipse;
 
+        std::map<uint32, uint32> _spellSwaps;
         float _healAbsorb;
 };
 
