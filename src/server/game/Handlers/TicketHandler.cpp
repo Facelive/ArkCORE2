@@ -42,7 +42,7 @@ void WorldSession::HandleGMTicketCreateOpcode(WorldPacket & recv_data)
         return;
     }
 
-    GMTicketResponse response = GMTICKET_RESPONSE_FAILURE;
+    GMTicketResponse response = GMTICKET_RESPONSE_CREATE_ERROR;
     // Player must not have ticket
     if (!sTicketMgr->GetTicketByPlayer(GetPlayer()->GetGUID()))
     {
@@ -52,7 +52,7 @@ void WorldSession::HandleGMTicketCreateOpcode(WorldPacket & recv_data)
 
         sWorld->SendGMText(LANG_COMMAND_TICKETNEW, GetPlayer()->GetName(), ticket->GetId());
 
-        response = GMTICKET_RESPONSE_SUCCESS;
+        response = GMTICKET_RESPONSE_CREATE_SUCCESS;
     }
 
     WorldPacket data(SMSG_GMTICKET_CREATE, 4);
@@ -65,8 +65,8 @@ void WorldSession::HandleGMTicketUpdateOpcode(WorldPacket & recv_data)
     std::string message;
     recv_data >> message;
 
-    GMTicketResponse response = GMTICKET_RESPONSE_FAILURE;
-    if (GmTicket *ticket = sTicketMgr->GetTicketByPlayer(GetPlayer()->GetGUID()))
+    GMTicketResponse response = GMTICKET_RESPONSE_UPDATE_ERROR;
+    if (GmTicket* ticket = sTicketMgr->GetTicketByPlayer(GetPlayer()->GetGUID()))
     {
         SQLTransaction trans = SQLTransaction(NULL);
         ticket->SetMessage(message);
@@ -74,7 +74,7 @@ void WorldSession::HandleGMTicketUpdateOpcode(WorldPacket & recv_data)
 
         sWorld->SendGMText(LANG_COMMAND_TICKETUPDATED, GetPlayer()->GetName(), ticket->GetId());
 
-        response = GMTICKET_RESPONSE_SUCCESS;
+        response = GMTICKET_RESPONSE_UPDATE_SUCCESS;
     }
 
     WorldPacket data(SMSG_GMTICKET_UPDATETEXT, 4);

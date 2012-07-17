@@ -176,7 +176,6 @@ bool Player::UpdateAllStats()
         UpdateMaxPower(Powers(i));
 
     UpdateAllRatings();
-    UpdateMasteryPercentage();
     UpdateAllCritPercentages();
     UpdateAllSpellCritChances();
     UpdateShieldBlockValue();
@@ -584,13 +583,6 @@ void Player::UpdateBlockPercentage()
         // Increase from block rating
         value += GetRatingBonusValue(CR_BLOCK);
 
-        // Increase from mastery rating
-        if (HasAura(76671)) //paladin Protection
-            value += GetMasteryPoints() * 0.0225f;
-
-        if (HasAura(76857)) //warrior Protection
-            value += GetMasteryPoints() * 0.015f;
-
         value = value < 0.0f ? 0.0f : value;
     }
     SetStatFloatValue(PLAYER_BLOCK_PERCENTAGE, value);
@@ -640,6 +632,44 @@ void Player::UpdateAllCritPercentages()
     UpdateCritPercentage(BASE_ATTACK);
     UpdateCritPercentage(OFF_ATTACK);
     UpdateCritPercentage(RANGED_ATTACK);
+}
+
+void Player::UpdateMastery()
+{
+    if (!CanUseMastery())
+    {
+        SetFloatValue(PLAYER_MASTERY, 0.0f);
+        return;
+    }
+
+    float value = GetTotalAuraModifier(SPELL_AURA_MASTERY);
+    value += GetRatingBonusValue(CR_MASTERY);
+    SetFloatValue(PLAYER_MASTERY, value);
+
+    TalentTabEntry const* talentTab = sTalentTabStore.LookupEntry(GetPrimaryTalentTree(GetActiveSpec()));
+    if (!talentTab)
+        return;
+
+    bool lastDummyEffect = true;
+    for (uint32 i = 0; i < MAX_MASTERY_SPELLS; ++i)
+    {
+        if (!talentTab->MasterySpellId[i])
+            continue;
+
+        if (Aura* aura = GetAura(talentTab->MasterySpellId[i]))
+        {
+            for (uint32 j = MAX_SPELL_EFFECTS; j > 0; --j)
+            {
+                if (!aura->HasEffect(j - 1))
+                    continue;
+
+                if (!lastDummyEffect)
+                    aura->GetEffect(j - 1)->SetAmount(int32(value * aura->GetSpellInfo()->Effects[j - 1].BonusCoefficient));
+                else
+                    lastDummyEffect = false;
+            }
+        }
+    }
 }
 
 const float m_diminishing_k[MAX_CLASSES] =
@@ -784,22 +814,6 @@ void Player::UpdateArmorPenetration(int32 amount)
 {
     // Store Rating Value
     SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + CR_ARMOR_PENETRATION, amount);
-}
-
-void Player::UpdateMasteryPercentage()
-{
-    // No mastery
-    float value = 0.0f;
-    if (CanMastery())
-    {
-        value = 0.0f;
-        // Mastery from SPELL_AURA_MASTERY aura
-        value += GetTotalAuraModifier(SPELL_AURA_MASTERY);
-        // Mastery from rating
-        value += GetRatingBonusValue(CR_MASTERY);
-        value = value < 0.0f ? 0.0f : value;
-    }
-    SetFloatValue(PLAYER_MASTERY, value);
 }
 
 void Player::UpdateMeleeHitChances()

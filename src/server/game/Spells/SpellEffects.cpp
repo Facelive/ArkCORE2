@@ -588,154 +588,6 @@ void Spell::EffectSchoolDMG(SpellEffIndex effIndex)
                     if (AuraEffect const * aurEff = m_caster->GetDummyAuraEffect(SPELLFAMILY_DRUID, 1771, 0))
                         if (unitTarget->GetAuraEffect(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_DRUID, 0x00200000, 0, 0))
                             AddPctN(damage, aurEff->GetAmount());
-
-                    if (m_caster->HasAura(16913))
-                    {
-                        int32 eclipse = 13;
-                        int mana = 0;
-
-                        if (m_caster->HasAura(81061) && roll_chance_i(12) || m_caster->HasAura(81062) && roll_chance_i(24)) // Euphoria
-                        {
-                            if (!m_caster->HasAura(48518) && !m_caster->HasAura(48517))  // Eclipse (lunar | solar)
-                                eclipse = 26;
-                            else
-                                eclipse = 13;
-
-                            m_caster->SetEclipsePower(int32(m_caster->GetEclipsePower() - eclipse));
-                            //m_caster->CastCustomSpell(m_caster, 89265, &eclipse, 0, 0, true); // Eclipse Energy (http://www.wowhead.com/spell=89265)
-                        }
-                        else // Normal Eclipse gain
-                            m_caster->SetEclipsePower(int32(m_caster->GetEclipsePower() - eclipse));
-                            //m_caster->CastCustomSpell(m_caster, 89265, &eclipse, 0, 0, true); // Eclipse Energy (http://www.wowhead.com/spell=89265)
-
-                        if (m_caster->GetEclipsePower() == -100)
-                        {
-                            m_caster->RemoveAurasDueToSpell(93432); // Nature's Grace CD remove.
-
-                            if (m_caster->HasAura(81061)) // Euphoria Rank 1
-                            {
-                                mana = 8;
-                                m_caster->CastCustomSpell(m_caster, 81070, &mana, 0, 0, true); // Euphoria (http://www.wowhead.com/spell=81070)
-                            }
-
-                            if (m_caster->HasAura(81062)) // Euphoria Rank 2
-                            {
-                                mana = 16;
-                                m_caster->CastCustomSpell(m_caster, 81070, &mana, 0, 0, true); // Euphoria (http://www.wowhead.com/spell=81070)
-                            }
-
-                            m_caster->CastSpell(m_caster, 48518, true, 0); // Cast Eclipse
-                        }
-
-                        // ECLIPSE LUNAR REMOVE
-                        if (m_caster->GetEclipsePower() > 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48518); // Eclipse (Lunar)
-                        }
-
-                        if (m_caster->GetEclipsePower() < 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48517); // Eclipse (Solar)
-                            m_caster->RemoveAurasDueToSpell(94338); // Eclipse (Solar) (Aura 332?)
-                        }
-                    }
-                }
-                // Starfire
-                else if (m_spellInfo->Id == 2912)
-                {
-                    if (m_caster->HasAura(16913))
-                    {
-                        int32 eclipse = 20;
-                        int mana = 0;
-                        if (m_caster->HasAura(81061) && roll_chance_i(12) || m_caster->HasAura(81062) && roll_chance_i(24)) // Euphoria
-                        {
-                            if (!m_caster->HasAura(48518) && !m_caster->HasAura(48517)) // Eclipse (lunar | solar)
-                                eclipse = 40;
-                            else
-                                eclipse = 20;
-
-                            m_caster->SetEclipsePower(int32(m_caster->GetEclipsePower() + eclipse));
-                            //m_caster->CastCustomSpell(m_caster, 89265, &eclipse, 0, 0, true); // Eclipse Energy (http://www.wowhead.com/spell=89265)
-                        }
-                        else  // Normal Eclipse gain
-                            m_caster->SetEclipsePower(int32(m_caster->GetEclipsePower() + eclipse));
-                            //m_caster->CastCustomSpell(m_caster, 89265, &eclipse, 0, 0, true); // Eclipse Energy (http://www.wowhead.com/spell=89265)
-
-                        if (m_caster->GetEclipsePower() == 100)
-                        {
-                            m_caster->RemoveAurasDueToSpell(93432); // Nature's Grace CD remove.
-
-                            if (m_caster->HasAura(81061)) // Euphoria Rank 1
-                            {
-                                mana = 8;
-                                m_caster->CastCustomSpell(m_caster, 81070, &mana, 0, 0, true); // Euphoria (http://www.wowhead.com/spell=81070)
-                            }
-
-                            if (m_caster->HasAura(81062)) // Euphoria Rank 2
-                            {
-                                mana = 16;
-                                m_caster->CastCustomSpell(m_caster, 81070, &mana, 0, 0, true); // Euphoria (http://www.wowhead.com/spell=81070)
-                            }
-
-                            if (m_caster->HasAura(93401)) // Sunfire Rank 1
-                                m_caster->CastSpell(m_caster, 94338, true, 0); // Eclipse (Solar)
-
-                            m_caster->CastSpell(m_caster, 48517, true, 0); // Cast Eclipse (http://www.wowhead.com/spell=48517)
-                        }
-
-                        // ECLIPSE REMOVE
-                        if (m_caster->GetEclipsePower() > 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48518); // Eclipse (Lunar)
-                        }
-
-                        if (m_caster->GetEclipsePower() < 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48517); // Eclipse (Solar)
-                            m_caster->RemoveAurasDueToSpell(94338); // Eclipse (Solar) (Aura 332?)
-                        }
-                    }
-                }
-                // Starsurge
-                else if (m_spellInfo->Id == 78674) // Starsurge (http://www.wowhead.com/spell=78674)
-                {
-                    if (m_caster->HasAura(16913)) // Moonfury
-                    {
-                        int32 eclipse = 0;
-                        if (m_caster->GetPower(POWER_ECLIPSE) < 0)
-                            eclipse = -15;
-                        else if (m_caster->GetPower(POWER_ECLIPSE) > 0)
-                            eclipse = 15;
-
-                        m_caster->SetEclipsePower(int32(m_caster->GetEclipsePower() + eclipse));
-                        //m_caster->CastCustomSpell(m_caster, 86605, &eclipse, 0, 0, true); // Starsurge
-
-                        if (m_caster->GetEclipsePower() == 100)
-                        {
-                            if (m_caster->HasAura(93401))  // Sunfire Rank 1
-                                m_caster->CastSpell(m_caster, 94338, true, 0);
-
-                            m_caster->CastSpell(m_caster, 48517, true, 0); // Eclipse (Solar)
-                            m_caster->RemoveAurasDueToSpell(93432); // Nature's Grace CD remove.
-                        }
-
-                        if (m_caster->GetEclipsePower() == -100)
-                        {
-                            m_caster->CastSpell(m_caster, 48518, true, 0); // Eclipse (Lunar)
-                            m_caster->RemoveAurasDueToSpell(93432); // Nature's Grace CD remove.
-                        }
-
-                        if (m_caster->GetEclipsePower() > 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48518); // Eclipse (Lunar)
-                        }
-
-                        if (m_caster->GetEclipsePower() < 0)
-                        {
-                            m_caster->RemoveAurasDueToSpell(48517); // Eclipse (Solar)
-                            m_caster->RemoveAurasDueToSpell(94338); // Eclipse (Solar) (Aura 332?)
-                        }
-                    }
                 }
                 break;
             }
@@ -1717,10 +1569,7 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
             // Death strike
             if (m_spellInfo->SpellFamilyFlags[0] & SPELLFAMILYFLAG_DK_DEATH_STRIKE)
             {
-                if ((m_caster->CountPctFromMaxHealth(7)) > (20 * m_caster->GetDamageTakenInPastSecs(5) / 100))
-                    bp = m_caster->CountPctFromMaxHealth(7);
-                else
-                    bp = (20 * m_caster->GetDamageTakenInPastSecs(5) / 100);
+                bp = std::min<int32>(m_caster->CountPctFromMaxHealth(damage), CalculatePctN(m_caster->GetDamageTakenInPastSecs(5), 15));
 
                 // Improved Death Strike
                 if (AuraEffect const* aurEff = m_caster->GetAuraEffect(SPELL_AURA_ADD_PCT_MODIFIER, SPELLFAMILY_DEATHKNIGHT, 2751, 0))
@@ -1764,10 +1613,21 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
                 else
                     targets.SetDst(*m_caster);
 
-                // Remove cooldown - summon spellls have category
+                // Remove cooldown - summon spells have category
                 m_caster->ToPlayer()->RemoveSpellCooldown(52150, true);
                 m_caster->ToPlayer()->RemoveSpellCooldown(46585, true);
                 break;
+            }
+            break;
+        case SPELLFAMILY_WARLOCK:
+            switch (m_spellInfo->Id)
+            {
+                case 19028: // Soul Link
+                {
+                    if (Pet* pet =  m_caster->ToPlayer()->GetPet())
+                        pet->AddAura(25228, pet);
+                    break;
+                }
             }
             break;
     }
@@ -1928,6 +1788,20 @@ void Spell::EffectTriggerSpell(SpellEffIndex effIndex)
                 if (Unit* pet = unitTarget->GetGuardianPet())
                     pet->CastSpell(pet, 28305, true);
                 return;
+            }
+            // Faerie Fire
+            case 91565:
+            {
+                // Feral Agression
+                if (AuraEffect const * aurEff = m_caster->GetDummyAuraEffect(SPELLFAMILY_DRUID, 960, 0))
+                {
+                    uint8 count = uint8(aurEff->GetAmount() - 1);
+                    while(count)
+                    {
+                        m_caster->CastSpell(unitTarget, 91565, true);
+                        count--;
+                    }
+                }
             }
         }
     }
@@ -2948,9 +2822,6 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
 
     if (level_diff > 0)
         damage -= level_multiplier * level_diff;
-
-    if (damage < 0)
-        return;
 
     if (unitTarget->GetMaxPower(power) == 0)
         return;
@@ -6160,12 +6031,14 @@ void Spell::EffectApplyGlyph(SpellEffIndex effIndex)
     uint8 minLevel = 0;
     switch (m_glyphIndex)
     {
-        case 0:
-        case 1: minLevel = 15; break;
-        case 2: minLevel = 50; break;
-        case 3: minLevel = 30; break;
-        case 4: minLevel = 70; break;
-        case 5: minLevel = 80; break;
+        case 1:
+        case 6: minLevel = 25; break;
+        case 2:
+        case 3:
+        case 7: minLevel = 50; break;
+        case 4:
+        case 5:
+        case 8: minLevel = 75; break;
     }
     if (minLevel && m_caster->getLevel() < minLevel)
     {
@@ -6188,7 +6061,7 @@ void Spell::EffectApplyGlyph(SpellEffIndex effIndex)
             }
 
             // remove old glyph
-            if (uint32 oldglyph = player->GetGlyph(m_glyphIndex))
+            if(uint32 oldglyph = player->GetGlyph(player->GetActiveSpec(), m_glyphIndex))
             {
                 if (GlyphPropertiesEntry const* old_gp = sGlyphPropertiesStore.LookupEntry(oldglyph))
                 {
@@ -6206,7 +6079,7 @@ void Spell::EffectApplyGlyph(SpellEffIndex effIndex)
     else
     {
         // Glyph removal
-        if (uint32 oldglyph = player->GetGlyph(m_glyphIndex))
+        if (uint32 oldglyph = player->GetGlyph(player->GetActiveSpec(), m_glyphIndex))
         {
             if (GlyphPropertiesEntry const *old_gp = sGlyphPropertiesStore.LookupEntry(oldglyph))
             {
@@ -6626,6 +6499,7 @@ void Spell::EffectSelfResurrect(SpellEffIndex effIndex)
     player->SetPower(POWER_RAGE, 0);
     player->SetPower(POWER_ENERGY, player->GetMaxPower(POWER_ENERGY));
     player->SetPower(POWER_FOCUS, 0);
+    player->SetPower(POWER_ECLIPSE, 0);
 
     player->SpawnCorpseBones();
 }
