@@ -419,7 +419,7 @@ void Unit::UpdateSplineMovement(uint32 t_diff)
 
 void Unit::DisableSpline()
 {
-    _movementInfo.RemoveMovementFlag(MovementFlags(MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD));
+    _movementInfo.RemoveMovementFlag(MovementFlags(MOVEMENTFLAG_SPLINE_ENABLED | MOVEMENTFLAG_FORWARD));
     movespline->_Interrupt();
 }
 
@@ -552,7 +552,7 @@ bool Unit::HasBreakableByDamageCrowdControlAura(Unit* excludeCasterChannel) cons
 {
     uint32 excludeAura = 0;
    if (Spell* currentChanneledSpell = excludeCasterChannel ? excludeCasterChannel->GetCurrentSpell(CURRENT_CHANNELED_SPELL) : NULL)
-       excludeAura = currentChanneledSpell->GetSpellInfo()->Id; //Avoid self interrupt of channeled Crowd Control spells like Seduction
+       excludeAura = currentChanneledSpell->GetSpellInfo()->Id; // Avoid self interrupt of channeled Crowd Control spells like Seduction
 
    return (   HasBreakableByDamageAuraType(SPELL_AURA_MOD_CONFUSE, excludeAura)
            || HasBreakableByDamageAuraType(SPELL_AURA_MOD_FEAR, excludeAura)
@@ -975,7 +975,7 @@ void Unit::CastSpell(GameObject *go, uint32 spellId, bool triggered, Item* castI
     CastSpell(targets, spellInfo, NULL, triggered ? TRIGGERED_FULL_MASK : TRIGGERED_NONE, castItem, triggeredByAura, originalCaster);
 }
 
-// Obsolete func need remove, here only for comotability vs another patches
+// Obsolete func need remove, here only for compatibility vs another patches
 uint32 Unit::SpellNonMeleeDamageLog(Unit* victim, uint32 spellID, uint32 damage)
 {
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellID);
@@ -4780,7 +4780,11 @@ void Unit::RemoveAllGameObjects()
 
 void Unit::SendSpellNonMeleeDamageLog(SpellNonMeleeDamage *log)
 {
-    WorldPacket data(SMSG_SPELLNONMELEEDAMAGELOG, (16+4+4+4+1+4+4+1+1+4+4+1)); // we guess size
+    WorldPacket data(SMSG_COMBAT_LOG_MULTIPLE, (4+4+4+4+16+4+4+4+1+4+4+1+1+4+4+1)); // we guess size
+    data << uint32(1);                                      // total number of log lines
+    data << uint32(0);
+    data << uint32(0);
+    data << uint32(SPELL_LOG_NON_MELEE_DAMAGE);
     data.append(log->target->GetPackGUID());
     data.append(log->attacker->GetPackGUID());
     data << uint32(log->SpellID);
@@ -4827,7 +4831,11 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo *pInfo)
 {
     AuraEffect const* aura = pInfo->auraEff;
 
-    WorldPacket data(SMSG_PERIODICAURALOG, 8+8+4+4+4+4*5+1);  //406
+    WorldPacket data(SMSG_COMBAT_LOG_MULTIPLE, 34);
+    data << uint32(1);                                      // total number of log lines
+    data << uint32(0);
+    data << uint32(0);
+    data << uint32(SPELL_LOG_PERIODIC_AURA);
     data.append(GetPackGUID());
     data.appendPackGUID(aura->GetCasterGUID());
     data << uint32(aura->GetId());                          // spellId
@@ -4871,7 +4879,11 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo *pInfo)
 
 void Unit::SendSpellMiss(Unit* target, uint32 spellID, SpellMissInfo missInfo)
 {
-    WorldPacket data(SMSG_SPELLLOGMISS, (4+8+1+4+8+1));
+    WorldPacket data(SMSG_COMBAT_LOG_MULTIPLE, 4+4+4+4+4+8+1+4+8+1);
+    data << uint32(1);                                      // total number of log lines
+    data << uint32(0);
+    data << uint32(0);
+    data << uint32(SPELL_LOG_MISS);
     data << uint32(spellID);
     data << uint64(GetGUID());
     data << uint8(0);                                       // can be 0 or 1
@@ -5212,7 +5224,7 @@ bool Unit::HandleAuraProcOnPowerAmount(Unit* victim, uint32 damage, AuraEffect* 
         sLog->outError("Unit::HandleAuraProcOnPowerAmount: Spell %u have 0 powerAmountRequired in EffectAmount[%d] or 0 powerRequired in EffectMiscValue, not handled custom case?", auraSpellInfo->Id, triggeredByAura->GetEffIndex());
         return false;
     }
-    
+
     if (GetPower(powerRequired) != powerAmountRequired)
         return false;
 
@@ -6288,7 +6300,7 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     return true;
                 }
                 return false;
-            }       
+            }
             // Vampiric Touch
             if (dummySpell->SpellFamilyFlags[1] & 0x00000400)
             {
@@ -6378,7 +6390,7 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                         }
                     }
                     return false;
-                }                
+                }
                 // Glyph of Prayer of Healing
                 case 55680:
                 {
@@ -10629,7 +10641,11 @@ void Unit::UnsummonAllTotems()
 void Unit::SendHealSpellLog(Unit* victim, uint32 SpellID, uint32 Damage, uint32 OverHeal, uint32 Absorb, bool critical)
 {
     // we guess size
-    WorldPacket data(SMSG_SPELLHEALLOG, (8+8+4+4+4+4+1+1));
+    WorldPacket data(SMSG_COMBAT_LOG_MULTIPLE, 4+4+4+4+8+8+4+4+4+4+1+1);
+    data << uint32(1);                                      // total number of log lines
+    data << uint32(0);
+    data << uint32(0);
+    data << uint32(SPELL_LOG_HEAL);
     data.append(victim->GetPackGUID());
     data.append(GetPackGUID());
     data << uint32(SpellID);
@@ -10652,14 +10668,18 @@ int32 Unit::HealBySpell(Unit* victim, SpellInfo const* spellInfo, uint32 addHeal
     return gain;
 }
 
-void Unit::SendEnergizeSpellLog(Unit* victim, uint32 spellID, int32 damage, Powers powerType)
+void Unit::SendEnergizeSpellLog(Unit* victim, uint32 SpellID, uint32 Damage, Powers powertype)
 {
-    WorldPacket data(SMSG_SPELLENERGIZELOG, (8+8+4+4+4+1));
+    WorldPacket data(SMSG_COMBAT_LOG_MULTIPLE, 4+4+4+4+8+8+4+4+4+1);
+    data << uint32(1);                                      // total number of log lines
+    data << uint32(0);
+    data << uint32(0);
+    data << uint32(SPELL_LOG_ENERGIZE);
     data.append(victim->GetPackGUID());
     data.append(GetPackGUID());
-    data << uint32(spellID);
-    data << uint32(powerType);
-    data << int32(damage);
+    data << uint32(SpellID);
+    data << uint32(powertype);
+    data << uint32(Damage);
     SendMessageToSet(&data, true);
 }
 
@@ -13139,7 +13159,7 @@ void Unit::setDeathState(DeathState s)
         ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, false);
         // remove aurastates allowing special moves
         ClearAllReactives();
-        ClearDiminishings();	
+        ClearDiminishings();
         if (IsInWorld())
         {
             // Only clear MotionMaster for entities that exists in world

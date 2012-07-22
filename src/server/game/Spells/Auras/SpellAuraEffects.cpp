@@ -5355,7 +5355,7 @@ void AuraEffect::HandleAuraDummy(AuraApplication const* aurApp, uint8 mode, bool
                             target->CastSpell(target, 58601, true); // dal
                         }
                         break;
-                        case 65213:	// Throw Oil Aura (Quest=13890)
+                        case 65213:    // Throw Oil Aura (Quest=13890)
                         {
                             if (caster->GetTypeId() != TYPEID_PLAYER)
                                 return;
