@@ -2213,18 +2213,28 @@ uint32 Unit::CalculateDamage(WeaponAttackType attType, bool normalized, bool add
 
 float Unit::CalculateLevelPenalty(SpellInfo const* spellProto) const
 {
-    if (spellProto->SpellLevel <= 0 || spellProto->SpellLevel >= spellProto->MaxLevel)
+    if (!spellProto->SpellLevel || !spellProto->MaxLevel)
+        return 1.0f;
+
+    if (spellProto->MaxLevel <= 0)
+        return 1.0f;
+    
+    //if caster level is lower that max caster level
+    if (getLevel() < spellProto->MaxLevel)
         return 1.0f;
 
     float LvlPenalty = 0.0f;
+    LvlPenalty = (22.0f + float (spellProto->MaxLevel) - float (getLevel())) / 20.0f;
+    
+    //to prevent positive effect
+    if (LvlPenalty > 1.0f)
+        return 1.0f;
+    
+    //level penalty is capped at 0
+    if (LvlPenalty < 0.0f)
+        return 0.0f;
 
-    if (spellProto->SpellLevel < 20)
-        LvlPenalty = 20.0f - spellProto->SpellLevel * 3.75f;
-    float LvlFactor = (float(spellProto->SpellLevel) + 6.0f) / float(getLevel());
-    if (LvlFactor > 1.0f)
-        LvlFactor = 1.0f;
-
-    return AddPctF(LvlFactor, -LvlPenalty);
+    return LvlPenalty;
 }
 
 void Unit::SendMeleeAttackStart(Unit* victim)
@@ -6756,7 +6766,7 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                 case 79133:
                 case 79134:
                 {
-                    if(effIndex != 0)
+                    if (effIndex != 0)
                         return false;
 
                     bool poisoned = false;
@@ -8482,7 +8492,7 @@ bool Unit::HandleAuraProc(Unit* victim, uint32 damage, Aura* triggeredByAura, Sp
                 case 1776:
                     *handled = true;
                     // Check so gouge spell effect [1] (SPELL_EFFECT_SCHOOL_DAMAGE) cannot cancel stun effect
-                    if(procSpell && procSpell->Id == 1776)
+                    if (procSpell && procSpell->Id == 1776)
                         return false;
                     return true;
                 break;
@@ -9072,12 +9082,18 @@ bool Unit::HandleProcTriggerSpell(Unit* victim, uint32 damage, AuraEffect* trigg
             if (GetTypeId() != TYPEID_PLAYER)
                 return false;
 
-            if (!HealthBelowPctDamaged(30, damage)) // Only proc if it brings us below 30% health
+            if (cooldown && ToPlayer()->HasSpellCooldown(96171))
+                return false;
+
+            if(!HealthBelowPctDamaged(30, damage)) // Only proc if it brings us below 30% health
                 return false;
 
             ToPlayer()->RemoveSpellCooldown(48982, true); // Remove cooldown of rune tap
             CastSpell(this, 96171, true); // next rune tap wont cost runes
-            cooldown = 45000; // Can only happen once in 45 seconds
+
+            if (cooldown)
+                ToPlayer()->AddSpellCooldown(96171, NULL, time(NULL) + cooldown);
+
             break;
         }
         // Sudden Doom
