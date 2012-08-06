@@ -366,7 +366,7 @@ pAuraEffectHandler AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleAuraModIncreaseSpeed,                      // 305 - SPELL_AURA_MOD_MINIMUM_SPEED
     &AuraEffect::HandleNULL,                                      // 306 - 0 spells in 3.3.5
     &AuraEffect::HandleNULL,                                      // 307 - 0 spells in 3.3.5
-    &AuraEffect::HandleNULL,                                      // 308 - new aura for hunter traps
+    &AuraEffect::HandleNoImmediateEffect,                         // 308 - SPELL_AURA_MOD_CRIT_CHANCE_FOR_CASTER_SPELL implemented in Unit::IsSpellCrit
     &AuraEffect::HandleNULL,                                      // 309 - 0 spells in 3.3.5
     &AuraEffect::HandleNoImmediateEffect,                         // 310 - SPELL_AURA_MOD_CREATURE_AOE_DAMAGE_AVOIDANCE implemented in Spell::CalculateDamageDone
     &AuraEffect::HandleNULL,                                      // 311 - 0 spells in 3.3.5
@@ -508,9 +508,12 @@ int32 AuraEffect::CalculateAmount(Unit* caster)
         case SPELL_AURA_MOD_ROOT:
         case SPELL_AURA_TRANSFORM:
             m_canBeRecalculated = false;
+
             if (!m_spellInfo->ProcFlags)
                 break;
+
             amount = int32(GetBase()->GetUnitOwner()->CountPctFromMaxHealth(10));
+
             if (caster)
             {
                 // Glyphs increasing damage cap
@@ -1536,7 +1539,7 @@ void AuraEffect::HandleShapeshiftBoosts(Unit* target, bool apply) const
                         target->CastSpell(target, spellId, true, NULL, this);
                     }
                     // Master Shapeshifter - Cat
-                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411,1))
+                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411, 1))
                     {
                         int32 bp = aurEff->GetAmount();
                         target->CastCustomSpell(target, 48420, &bp, NULL, NULL, true);
@@ -1544,7 +1547,7 @@ void AuraEffect::HandleShapeshiftBoosts(Unit* target, bool apply) const
                 break;
                 case FORM_BEAR:
                     // Master Shapeshifter - Bear
-                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411,1))
+                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411, 1))
                     {
                         int32 bp = aurEff->GetAmount();
                         target->CastCustomSpell(target, 48418, &bp, NULL, NULL, true);
@@ -1573,7 +1576,7 @@ void AuraEffect::HandleShapeshiftBoosts(Unit* target, bool apply) const
                 break;
                 case FORM_MOONKIN:
                     // Master Shapeshifter - Moonkin
-                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411,1))
+                    if (AuraEffect const* aurEff = target->GetAuraEffect(48411, 1))
                     {
                         int32 bp = aurEff->GetAmount();
                         target->CastCustomSpell(target, 48421, &bp, NULL, NULL, true);
