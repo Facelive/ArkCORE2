@@ -692,6 +692,8 @@ Player::Player(WorldSession* session): Unit(true), _achievementMgr(this), _reput
 
     _regenTimer = 0;
     _regenTimerCount = 0;
+    _focusRegenTimerCount = 0;
+    _holyPowerRegenTimerCount = 0;
     _weaponChangeTimer = 0;
 
     _zoneUpdateId = 0;
@@ -6067,6 +6069,8 @@ void Player::ApplyRatingMod(CombatRating cr, int32 value, bool apply)
             float RatingChange = value * GetRatingMultiplier(cr);
             ApplyAttackTimePercentMod(BASE_ATTACK, RatingChange, apply);
             ApplyAttackTimePercentMod(OFF_ATTACK, RatingChange, apply);
+            if (getClass() == CLASS_DEATH_KNIGHT)
+                UpdateAllRunesRegen();
             break;
         }
         case CR_HASTE_RANGED:
@@ -24354,17 +24358,31 @@ void Player::UpdateCharmedAI()
     }
 }
 
-uint32 Player::GetRuneBaseCooldown(uint8 index)
+uint32 Player::GetRuneTypeBaseCooldown(RuneType runeType) const
 {
-    uint8 rune = GetBaseRune(index);
-    uint32 cooldown = RUNE_BASE_COOLDOWN;
+    float cooldown = RUNE_BASE_COOLDOWN;
+    float hastePct = 0.0f;
 
     AuraEffectList const& regenAura = GetAuraEffectsByType(SPELL_AURA_MOD_POWER_REGEN_PERCENT);
     for (AuraEffectList::const_iterator i = regenAura.begin();i != regenAura.end(); ++i)
     {
-        if ((*i)->GetMiscValue() == POWER_RUNE && (*i)->GetMiscValueB() == rune)
-            cooldown = cooldown*(100-(*i)->GetAmount())/100;
+        if ((*i)->GetMiscValue() == POWER_RUNE && (*i)->GetMiscValueB() == runeType)
+            cooldown *= 1.0f - (*i)->GetAmount() / 100.0f;
     }
+
+    // Runes cooldown are now affected by player's haste from equipment ...
+    hastePct = GetRatingBonusValue(CR_HASTE_MELEE);
+
+    // ... and some auras.
+    AuraEffectList const& meleeHasteAura = GetAuraEffectsByType(SPELL_AURA_MOD_MELEE_HASTE);
+    for (AuraEffectList::const_iterator i = meleeHasteAura.begin();i != meleeHasteAura.end(); ++i)
+        hastePct += (*i)->GetAmount();
+
+    AuraEffectList const& meleeHasteAura2 = GetAuraEffectsByType(SPELL_AURA_MOD_MELEE_ATTACK_SPEED);
+    for (AuraEffectList::const_iterator i = meleeHasteAura2.begin();i != meleeHasteAura2.end(); ++i)
+        hastePct += (*i)->GetAmount();
+
+    cooldown *=  1.0f - (hastePct / 100.0f);
 
     return cooldown;
 }
